@@ -1,9 +1,10 @@
 package webapp.marginality2.model;
 
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.Id;
 
 
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.Objects;
 
 /**
@@ -27,14 +28,15 @@ import java.util.Objects;
 @lombok.Data
 @NoArgsConstructor
 public abstract class AbstractEntity {
+    @Id
     private int id;
     private String name;
     private int cost;
     private boolean isForSale;
     private int count;
-    private Date date;
+    private LocalDate date;
 
-    protected AbstractEntity(int id, String name, int cost, boolean isForSale, int count, Date data) {
+    protected AbstractEntity(int id, String name, int cost, boolean isForSale, int count, LocalDate data) {
         this.id = id;
         this.name = name;
         this.cost = cost;

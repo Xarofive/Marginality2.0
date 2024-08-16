@@ -1,12 +1,36 @@
 package webapp.marginality2.config;
 
+import io.r2dbc.spi.ConnectionFactories;
+import io.r2dbc.spi.ConnectionFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.r2dbc.repository.config.EnableR2dbcRepositories;
+import org.springframework.data.r2dbc.config.AbstractR2dbcConfiguration;
+import org.springframework.r2dbc.connection.R2dbcTransactionManager;
+import org.springframework.transaction.ReactiveTransactionManager;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
+import org.springframework.beans.factory.annotation.Value;
 
 @Configuration
-@EnableR2dbcRepositories(basePackages = "webapp.marginality2.repository")
-public class DatabaseConfig {
+@EnableTransactionManagement
+public class DatabaseConfig extends AbstractR2dbcConfiguration {
 
+    @Value("${spring.r2dbc.url}")
+    private String url;
 
+    @Value("${spring.r2dbc.username}")
+    private String username;
+
+    @Value("${spring.r2dbc.password}")
+    private String password;
+
+    @Bean
+    @Override
+    public ConnectionFactory connectionFactory() {
+        return ConnectionFactories.get(url);
+    }
+
+    @Bean
+    public ReactiveTransactionManager transactionManager(ConnectionFactory connectionFactory) {
+        return new R2dbcTransactionManager(connectionFactory);
+    }
 }
