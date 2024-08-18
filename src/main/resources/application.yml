@@ -2,37 +2,34 @@ spring:
   application:
     name: marginality2
 
+  profiles:
+    active: default
+
   r2dbc:
-    url: r2dbc:h2:mem:///testdb;DB_CLOSE_DELAY=-1
+    url: ${DATABASE_URL:r2dbc:h2:file:///./data/prod;DB_CLOSE_DELAY=-1}
     username: sa
-    password:
-    pool:
-      initial-size: 5
-      max-size: 20
-      max-idle-time: 30m
+    password: ""
 
-#  jpa:
-    # hibernate.ddl-auto: update   # Закомментировано, так как не используется
-#    database-platform: org.hibernate.dialect.H2Dialect
-#    properties:
-#      hibernate:
-#        dialect: org.hibernate.dialect.H2Dialect
 
+  flyway:
+    url: jdbc:h2:file:./data/prod
+    user: sa
+    password: ""
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true  # Позволяет использовать Flyway с существующими базами данных
+    sql-migration-prefix: V  # Префикс для SQL-скриптов миграции (например, V1__init.sql)
+    clean-disabled: true  # Запрещает очистку базы данных через Flyway (для безопасности)
   docker:
     compose:
       enabled: false
 
-# h2:
-#   console:
-#     enabled: true
+  h2:
+    console:
+      enabled: true
 
-# logging:
-#   level:
-#     org:
-#       springframework:
-#         data:
-#           r2dbc: DEBUG
-#     io:
-#       r2dbc:
-#         spi: DEBUG
-#         pool: DEBUG
+logging:
+  level:
+    org.springframework.r2dbc.core: DEBUG  # Логирование запросов R2DBC
+    org.springframework.data.r2dbc: DEBUG  # Логирование операций с данными через Spring Data R2DBC
+    org.flywaydb: DEBUG

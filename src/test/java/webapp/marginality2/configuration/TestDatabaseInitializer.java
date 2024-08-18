@@ -25,16 +25,16 @@ public class TestDatabaseInitializer {
         @PostConstruct
         public void initialize() {
             client.sql("CREATE TABLE IF NOT EXISTS CHICKEN (" +
-                    "id INT PRIMARY KEY AUTO_INCREMENT, " +
-                    "NAME VARCHAR(255), " +
-                    "COST INT, " +
-                    "IS_FOR_SALE BOOLEAN, " +
-                    "COUNT INT, " +
-                    "DATE DATE)")
-                .fetch()
-                .rowsUpdated()
-                .then()
-                .subscribe();
+                            "id INT PRIMARY KEY AUTO_INCREMENT, " +
+                            "NAME VARCHAR(255), " +
+                            "COST INT, " +
+                            "IS_FOR_SALE BOOLEAN, " +
+                            "COUNT INT, " +
+                            "DATE DATE)")
+                    .fetch()
+                    .rowsUpdated()
+                    .then()
+                    .subscribe();
         }
     }
 }

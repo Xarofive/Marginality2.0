@@ -2,6 +2,7 @@ package webapp.marginality2.config;
 
 import io.r2dbc.spi.ConnectionFactories;
 import io.r2dbc.spi.ConnectionFactory;
+import io.r2dbc.spi.ConnectionFactoryOptions;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.r2dbc.config.AbstractR2dbcConfiguration;
@@ -26,8 +27,14 @@ public class DatabaseConfig extends AbstractR2dbcConfiguration {
     @Bean
     @Override
     public ConnectionFactory connectionFactory() {
-        return ConnectionFactories.get(url);
+        ConnectionFactoryOptions options = ConnectionFactoryOptions.parse(url)
+                .mutate()
+                .option(ConnectionFactoryOptions.USER, username)
+                .option(ConnectionFactoryOptions.PASSWORD, password)
+                .build();
+        return ConnectionFactories.get(options);
     }
+
 
     @Bean
     public ReactiveTransactionManager transactionManager(ConnectionFactory connectionFactory) {

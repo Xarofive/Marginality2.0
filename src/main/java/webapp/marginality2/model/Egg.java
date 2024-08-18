@@ -5,7 +5,6 @@ import org.springframework.data.relational.core.mapping.Table;
 
 import java.time.LocalDate;
 
-
 @NoArgsConstructor
 @Table
 public class Egg extends AbstractEntity {
