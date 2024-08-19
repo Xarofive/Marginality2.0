@@ -26,7 +26,7 @@ public class MeatServiceImpl implements MeatService {
             .flatMap(existingMeat -> {
                 existingMeat.setName(meat.getName());
                 existingMeat.setCost(meat.getCost());
-                existingMeat.setForSale(meat.isForSale());
+                existingMeat.setStatus(meat.getStatus());
                 existingMeat.setCount(meat.getCount());
                 existingMeat.setDate(meat.getDate());
                 return meatRepository.save(existingMeat);

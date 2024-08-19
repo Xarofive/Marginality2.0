@@ -29,7 +29,7 @@ public class ChickenServiceImpl implements ChickenService {
                 .flatMap(existingChicken -> {
                     existingChicken.setName(chicken.getName());
                     existingChicken.setCost(chicken.getCost());
-                    existingChicken.setForSale(chicken.isForSale());
+                    existingChicken.setStatus(chicken.getStatus());
                     existingChicken.setCount(chicken.getCount());
                     existingChicken.setDate(chicken.getDate());
                     return chickenRepository.save(existingChicken);

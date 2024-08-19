@@ -12,6 +12,7 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteAlias;
 import webapp.marginality2.model.Chicken;
+import webapp.marginality2.model.Status;
 
 import java.time.LocalDate;
 import java.util.Arrays;
@@ -55,7 +56,7 @@ public class ChickenGridView extends Div {
         grid.getColumnByKey("date").setHeader("Дата").setSortable(true)
                 .setRenderer(new LocalDateRenderer<>(Chicken::getDate, "MM/dd/yyyy"));
 
-        grid.addColumn(chicken -> chicken.isForSale() ? "на продажу" : "склад")
+        grid.addColumn(Chicken::getStatus)
                 .setHeader("Статус")
                 .setSortable(true)
                 .setKey("status");
@@ -135,8 +136,9 @@ public class ChickenGridView extends Div {
         statusFilter.setClearButtonVisible(true);
         statusFilter.setValueChangeMode(ValueChangeMode.EAGER);
         statusFilter.addValueChangeListener(event -> {
+            String filterValue = statusFilter.getValue().toLowerCase();
             List<Chicken> filteredChickens = getChickens().stream()
-                    .filter(chicken -> (chicken.isForSale() ? "на продажу" : "склад").contains(statusFilter.getValue().toLowerCase()))
+                    .filter(chicken -> chicken.getStatus().name().toLowerCase().contains(filterValue))
                     .toList();
             grid.setItems(filteredChickens);
         });
@@ -145,9 +147,9 @@ public class ChickenGridView extends Div {
 
     private List<Chicken> getChickens() {
         return Arrays.asList(
-                new Chicken(1, "Chicken 1", 100, true, 10, LocalDate.now()),
-                new Chicken(2, "Chicken 2", 150, false, 5, LocalDate.now().minusDays(1)),
-                new Chicken(3, "Chicken 3", 200, true, 20, LocalDate.now().minusDays(2))
+                new Chicken(1, "Chicken 1", 100, Status.EXPIRED, 10, LocalDate.now()),
+                new Chicken(2, "Chicken 2", 150, Status.FOR_SALE, 5, LocalDate.now().minusDays(1)),
+                new Chicken(3, "Chicken 3", 200, Status.FOR_SALE, 20, LocalDate.now().minusDays(2))
         );
     }
 }

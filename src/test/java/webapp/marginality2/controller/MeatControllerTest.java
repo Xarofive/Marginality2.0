@@ -9,6 +9,7 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import webapp.marginality2.model.Meat;
+import webapp.marginality2.model.Status;
 import webapp.marginality2.service.MeatService;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -26,7 +27,7 @@ class MeatControllerTest {
 
     @Test
     void testCreateMeat() {
-        Meat meat = new Meat(1, "Beef", 200, true, 5, null);
+        Meat meat = new Meat(1, "Beef", 200, Status.EXPIRED, 5, null);
 
         when(meatService.create(any(Meat.class))).thenReturn(Mono.just(meat));
 
@@ -42,7 +43,7 @@ class MeatControllerTest {
 
     @Test
     void testUpdateMeat() {
-        Meat meat = new Meat(1, "Pork", 250, true, 8, null);
+        Meat meat = new Meat(1, "Pork", 250, Status.STORAGE, 8, null);
 
         when(meatService.update(anyInt(), any(Meat.class))).thenReturn(Mono.just(meat));
 
@@ -58,7 +59,7 @@ class MeatControllerTest {
 
     @Test
     void testGetMeatById() {
-        Meat meat = new Meat(1, "Beef", 200, true, 5, null);
+        Meat meat = new Meat(1, "Beef", 200, Status.FOR_SALE, 5, null);
 
         when(meatService.findById(1)).thenReturn(Mono.just(meat));
 
@@ -72,8 +73,8 @@ class MeatControllerTest {
 
     @Test
     void testGetAllMeats() {
-        Meat meat1 = new Meat(1, "Beef", 200, true, 5, null);
-        Meat meat2 = new Meat(2, "Pork", 150, true, 7, null);
+        Meat meat1 = new Meat(1, "Beef", 200, Status.EXPIRED, 5, null);
+        Meat meat2 = new Meat(2, "Pork", 150, Status.EXPIRED, 7, null);
 
         when(meatService.findAll()).thenReturn(Flux.just(meat1, meat2));
 

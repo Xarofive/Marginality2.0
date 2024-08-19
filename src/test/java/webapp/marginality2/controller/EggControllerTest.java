@@ -9,6 +9,7 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import webapp.marginality2.model.Egg;
+import webapp.marginality2.model.Status;
 import webapp.marginality2.service.EggService;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -26,7 +27,7 @@ class EggControllerTest {
 
     @Test
     void testCreateEgg() {
-        Egg egg = new Egg(1, "Golden Egg", 100, true, 10, null);
+        Egg egg = new Egg(1, "Golden Egg", 100, Status.EXPIRED, 10, null);
 
         when(eggService.create(any(Egg.class))).thenReturn(Mono.just(egg));
 
@@ -42,7 +43,7 @@ class EggControllerTest {
 
     @Test
     void testUpdateEgg() {
-        Egg egg = new Egg(1, "Golden Egg", 150, true, 15, null);
+        Egg egg = new Egg(1, "Golden Egg", 150, Status.EXPIRED, 15, null);
 
         when(eggService.update(anyInt(), any(Egg.class))).thenReturn(Mono.just(egg));
 
@@ -58,7 +59,7 @@ class EggControllerTest {
 
     @Test
     void testGetEggById() {
-        Egg egg = new Egg(1, "Golden Egg", 100, true, 10, null);
+        Egg egg = new Egg(1, "Golden Egg", 100, Status.EXPIRED, 10, null);
 
         when(eggService.findById(1)).thenReturn(Mono.just(egg));
 
@@ -72,8 +73,8 @@ class EggControllerTest {
 
     @Test
     void testGetAllEggs() {
-        Egg egg1 = new Egg(1, "Golden Egg", 100, true, 10, null);
-        Egg egg2 = new Egg(2, "Silver Egg", 80, true, 20, null);
+        Egg egg1 = new Egg(1, "Golden Egg", 100, Status.EXPIRED, 10, null);
+        Egg egg2 = new Egg(2, "Silver Egg", 80, Status.EXPIRED, 20, null);
 
         when(eggService.findAll()).thenReturn(Flux.just(egg1, egg2));
 

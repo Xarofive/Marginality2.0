@@ -25,7 +25,7 @@ public class EggServiceImpl implements EggService {
                 .flatMap(existingEgg -> {
                     existingEgg.setName(egg.getName());
                     existingEgg.setCost(egg.getCost());
-                    existingEgg.setForSale(egg.isForSale());
+                    existingEgg.setStatus(egg.getStatus());
                     existingEgg.setCount(egg.getCount());
                     existingEgg.setDate(egg.getDate());
                     return eggRepository.save(existingEgg);

@@ -15,6 +15,7 @@ import reactor.core.publisher.Mono;
 import webapp.marginality2.config.DatabaseConfig;
 import webapp.marginality2.configuration.TestDatabaseInitializer;
 import webapp.marginality2.model.Chicken;
+import webapp.marginality2.model.Status;
 import webapp.marginality2.service.ChickenService;
 
 import java.time.LocalDate;
@@ -34,12 +35,12 @@ class ChickenControllerTest {
 
     @BeforeEach
     void setUp() {
-        sampleChicken = new Chicken(0, "Sample Chicken", 100, true, 10, LocalDate.now());
+        sampleChicken = new Chicken(0, "Sample Chicken", 100, Status.EXPIRED, 10, LocalDate.now());
     }
 
     @Test
     void testCreateChicken() {
-        Chicken createdChicken = new Chicken(1, "Sample Chicken", 100, true, 10, LocalDate.now());
+        Chicken createdChicken = new Chicken(1, "Sample Chicken", 100, Status.EXPIRED, 10, LocalDate.now());
 
         Mockito.when(chickenService.create(Mockito.any(Chicken.class))).thenReturn(Mono.just(createdChicken));
 
@@ -56,7 +57,7 @@ class ChickenControllerTest {
 
     @Test
     void testUpdateChicken() {
-        Chicken updatedChicken = new Chicken(1, "Sample Chicken Updated", 150, false, 5, LocalDate.now());
+        Chicken updatedChicken = new Chicken(1, "Sample Chicken Updated", 150, Status.EXPIRED, 5, LocalDate.now());
 
         Mockito.when(chickenService.update(Mockito.eq(1), Mockito.any(Chicken.class))).thenReturn(Mono.just(updatedChicken));
 
@@ -73,7 +74,7 @@ class ChickenControllerTest {
 
     @Test
     void testGetChickenById() {
-        Chicken chicken = new Chicken(1, "Sample Chicken", 100, true, 10, LocalDate.now());
+        Chicken chicken = new Chicken(1, "Sample Chicken", 100, Status.EXPIRED, 10, LocalDate.now());
 
         Mockito.when(chickenService.findById(1)).thenReturn(Mono.just(chicken));
 
@@ -89,8 +90,8 @@ class ChickenControllerTest {
 
     @Test
     void testGetAllChickens() {
-        Chicken chicken1 = new Chicken(1, "Sample Chicken", 100, true, 10, LocalDate.now());
-        Chicken chicken2 = new Chicken(2, "Another Chicken", 150, false, 5, LocalDate.now());
+        Chicken chicken1 = new Chicken(1, "Sample Chicken", 100, Status.EXPIRED, 10, LocalDate.now());
+        Chicken chicken2 = new Chicken(2, "Another Chicken", 150, Status.EXPIRED, 5, LocalDate.now());
 
         Mockito.when(chickenService.findAll()).thenReturn(Flux.just(chicken1, chicken2));
 
