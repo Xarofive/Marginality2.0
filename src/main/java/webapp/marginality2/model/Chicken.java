@@ -1,12 +1,16 @@
 package webapp.marginality2.model;
 
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.springframework.data.relational.core.mapping.Table;
 
 import java.time.LocalDate;
 
+@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @Table
+@Data
 public class Chicken extends AbstractEntity {
     public Chicken(int id, String name, int cost, boolean isForSale, int count, LocalDate date) {
         super(id, name, cost, isForSale, count, date);
