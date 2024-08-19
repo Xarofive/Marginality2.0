@@ -2,8 +2,6 @@ package webapp.marginality2.model;
 
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
-
-
 import java.time.LocalDate;
 import java.util.Objects;
 
