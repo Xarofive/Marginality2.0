@@ -57,60 +57,90 @@ public class ChickenGridView extends Div {
 
         grid.addColumn(chicken -> chicken.isForSale() ? "на продажу" : "склад")
                 .setHeader("Статус")
-                .setSortable(true);
+                .setSortable(true)
+                .setKey("status");
     }
 
     private void addFiltersToGrid() {
         HeaderRow filterRow = grid.appendHeaderRow();
 
+        addNameFilter(filterRow);
+        addCostFilter(filterRow);
+        addCountFilter(filterRow);
+        addDateFilter(filterRow);
+        addStatusFilter(filterRow);
+    }
+
+    private void addNameFilter(HeaderRow filterRow) {
         TextField nameFilter = new TextField();
         nameFilter.setPlaceholder("Фильтр по названию");
         nameFilter.setClearButtonVisible(true);
         nameFilter.setValueChangeMode(ValueChangeMode.EAGER);
-        nameFilter.addValueChangeListener(event -> applyFilters(nameFilter.getValue(), null, null, null, null));
+        nameFilter.addValueChangeListener(event -> {
+            List<Chicken> filteredChickens = getChickens().stream()
+                    .filter(chicken -> chicken.getName().toLowerCase().contains(nameFilter.getValue().toLowerCase()))
+                    .toList();
+            grid.setItems(filteredChickens);
+        });
         filterRow.getCell(grid.getColumnByKey("name")).setComponent(nameFilter);
+    }
 
+    private void addCostFilter(HeaderRow filterRow) {
         TextField costFilter = new TextField();
         costFilter.setPlaceholder("Фильтр по стоимости");
         costFilter.setClearButtonVisible(true);
         costFilter.setValueChangeMode(ValueChangeMode.EAGER);
-        costFilter.addValueChangeListener(event -> applyFilters(null, costFilter.getValue(), null, null, null));
+        costFilter.addValueChangeListener(event -> {
+            List<Chicken> filteredChickens = getChickens().stream()
+                    .filter(chicken -> String.valueOf(chicken.getCost()).contains(costFilter.getValue()))
+                    .toList();
+            grid.setItems(filteredChickens);
+        });
         filterRow.getCell(grid.getColumnByKey("cost")).setComponent(costFilter);
+    }
 
+    private void addCountFilter(HeaderRow filterRow) {
         TextField countFilter = new TextField();
-        countFilter.setPlaceholder("Фильтр по кол-ву");
+        countFilter.setPlaceholder("Фильтр по количеству");
         countFilter.setClearButtonVisible(true);
         countFilter.setValueChangeMode(ValueChangeMode.EAGER);
-        countFilter.addValueChangeListener(event -> applyFilters(null, null, countFilter.getValue(), null, null));
+        countFilter.addValueChangeListener(event -> {
+            List<Chicken> filteredChickens = getChickens().stream()
+                    .filter(chicken -> String.valueOf(chicken.getCount()).contains(countFilter.getValue()))
+                    .toList();
+            grid.setItems(filteredChickens);
+        });
         filterRow.getCell(grid.getColumnByKey("count")).setComponent(countFilter);
+    }
 
+    private void addDateFilter(HeaderRow filterRow) {
         DatePicker dateFilter = new DatePicker();
         dateFilter.setPlaceholder("Фильтр по дате");
         dateFilter.setClearButtonVisible(true);
-        dateFilter.addValueChangeListener(event -> applyFilters(null, null, null, dateFilter.getValue(), null));
+        dateFilter.addValueChangeListener(event -> {
+            List<Chicken> filteredChickens = getChickens().stream()
+                    .filter(chicken -> {
+                        LocalDate filterDate = dateFilter.getValue();
+                        return filterDate == null || chicken.getDate().isEqual(filterDate);
+                    })
+                    .toList();
+            grid.setItems(filteredChickens);
+        });
         filterRow.getCell(grid.getColumnByKey("date")).setComponent(dateFilter);
+    }
 
+    private void addStatusFilter(HeaderRow filterRow) {
         TextField statusFilter = new TextField();
         statusFilter.setPlaceholder("Фильтр по статусу");
         statusFilter.setClearButtonVisible(true);
         statusFilter.setValueChangeMode(ValueChangeMode.EAGER);
-        statusFilter.addValueChangeListener(event -> applyFilters(null, null, null, null, statusFilter.getValue()));
-        filterRow.getCell(grid.getColumns().get(4)).setComponent(statusFilter);
-    }
-
-    private void applyFilters(String name, String cost, String count, LocalDate date, String status) {
-        List<Chicken> filteredChickens = getChickens().stream()
-                .filter(chicken -> {
-                    boolean matchesName = (name == null || chicken.getName().toLowerCase().contains(name.toLowerCase()));
-                    boolean matchesCost = (cost == null || String.valueOf(chicken.getCost()).contains(cost));
-                    boolean matchesCount = (count == null || String.valueOf(chicken.getCount()).contains(count));
-                    boolean matchesDate = (date == null || chicken.getDate().equals(date));
-                    boolean matchesStatus = (status == null ||
-                            (chicken.isForSale() ? "на продажу" : "склад").contains(status.toLowerCase()));
-                    return matchesName && matchesCost && matchesCount && matchesDate && matchesStatus;
-                })
-                .toList();
-        grid.setItems(filteredChickens);
+        statusFilter.addValueChangeListener(event -> {
+            List<Chicken> filteredChickens = getChickens().stream()
+                    .filter(chicken -> (chicken.isForSale() ? "на продажу" : "склад").contains(statusFilter.getValue().toLowerCase()))
+                    .toList();
+            grid.setItems(filteredChickens);
+        });
+        filterRow.getCell(grid.getColumnByKey("status")).setComponent(statusFilter);
     }
 
     private List<Chicken> getChickens() {
