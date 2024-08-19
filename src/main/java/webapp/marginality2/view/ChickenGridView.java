@@ -1,13 +1,16 @@
 package webapp.marginality2.view;
 
+import com.vaadin.flow.component.Text;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
-import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.textfield.TextField;
-import com.vaadin.flow.component.datepicker.DatePicker;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.renderer.LocalDateRenderer;
-import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteAlias;
@@ -15,6 +18,7 @@ import webapp.marginality2.model.Chicken;
 import webapp.marginality2.model.Status;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -24,14 +28,33 @@ import java.util.List;
 public class ChickenGridView extends Div {
 
     private final Grid<Chicken> grid;
+    private List<Chicken> chickens;
 
     public ChickenGridView() {
         addClassName("chicken-grid-view");
         setSizeFull();
 
         grid = createGrid();
-        add(grid);
-        addFiltersToGrid();
+        grid.setWidth("90%");
+
+        // Создаем горизонтальный layout для таблицы и кнопок
+        HorizontalLayout gridAndButtonsLayout = new HorizontalLayout(grid);
+        gridAndButtonsLayout.setSizeFull();
+        gridAndButtonsLayout.setFlexGrow(1, grid);
+
+        // Создаем форму и добавляем её ниже таблицы
+        ChickenForm chickenForm = new ChickenForm(this::addChickenToGrid);
+
+        // Создаем вертикальный layout для таблицы и формы
+        VerticalLayout mainLayout = new VerticalLayout(gridAndButtonsLayout, chickenForm);
+        mainLayout.setSizeFull();
+        mainLayout.setFlexGrow(1, gridAndButtonsLayout);
+
+        add(mainLayout);
+
+        // Добавляем фильтры через отдельный класс
+        ChickenGridFilters filters = new ChickenGridFilters(grid, getChickens());
+        filters.addFiltersToGrid();
     }
 
     private Grid<Chicken> createGrid() {
@@ -45,6 +68,7 @@ public class ChickenGridView extends Div {
         grid.setColumns("name", "cost", "count", "date");
 
         configureColumns(grid);
+        addDeleteButtonColumn(grid); // Добавляем колонку с кнопками удаления
 
         return grid;
     }
@@ -62,94 +86,53 @@ public class ChickenGridView extends Div {
                 .setKey("status");
     }
 
-    private void addFiltersToGrid() {
-        HeaderRow filterRow = grid.appendHeaderRow();
+    private void addDeleteButtonColumn(Grid<Chicken> grid) {
+        grid.addColumn(new ComponentRenderer<>(chicken -> {
+            Button deleteButton = new Button("Удалить");
+            deleteButton.getElement().getStyle().set("background-color", "red");
+            deleteButton.getElement().getStyle().set("color", "white");
 
-        addNameFilter(filterRow);
-        addCostFilter(filterRow);
-        addCountFilter(filterRow);
-        addDateFilter(filterRow);
-        addStatusFilter(filterRow);
+            deleteButton.addClickListener(event -> {
+                // Создаем уведомление с кнопками подтверждения и отмены
+                Notification confirmation = new Notification();
+                confirmation.setPosition(Notification.Position.MIDDLE);
+                confirmation.setDuration(5000); // Уведомление исчезнет через 5 секунд, если не будет выбора
+
+                Button confirmButton = new Button("Да", e -> {
+                    List<Chicken> updatedChickens = new ArrayList<>(getChickens());
+                    updatedChickens.remove(chicken);
+                    grid.setItems(updatedChickens);
+                    confirmation.close();
+                    Notification.show("Запись удалена");
+                });
+                confirmButton.getElement().getStyle().set("background-color", "green");
+                confirmButton.getElement().getStyle().set("color", "white");
+
+                Button cancelButton = new Button("Нет", e -> confirmation.close());
+                cancelButton.getElement().getStyle().set("background-color", "gray");
+                cancelButton.getElement().getStyle().set("color", "white");
+
+                HorizontalLayout buttons = new HorizontalLayout(confirmButton, cancelButton);
+                confirmation.add(new Div(new Text("Вы действительно хотите удалить запись?")), buttons);
+                confirmation.open();
+            });
+
+            return deleteButton;
+        })).setHeader("Действия").setKey("actions").setAutoWidth(true);
     }
 
-    private void addNameFilter(HeaderRow filterRow) {
-        TextField nameFilter = new TextField();
-        nameFilter.setPlaceholder("Фильтр по названию");
-        nameFilter.setClearButtonVisible(true);
-        nameFilter.setValueChangeMode(ValueChangeMode.EAGER);
-        nameFilter.addValueChangeListener(event -> {
-            List<Chicken> filteredChickens = getChickens().stream()
-                    .filter(chicken -> chicken.getName().toLowerCase().contains(nameFilter.getValue().toLowerCase()))
-                    .toList();
-            grid.setItems(filteredChickens);
-        });
-        filterRow.getCell(grid.getColumnByKey("name")).setComponent(nameFilter);
-    }
-
-    private void addCostFilter(HeaderRow filterRow) {
-        TextField costFilter = new TextField();
-        costFilter.setPlaceholder("Фильтр по стоимости");
-        costFilter.setClearButtonVisible(true);
-        costFilter.setValueChangeMode(ValueChangeMode.EAGER);
-        costFilter.addValueChangeListener(event -> {
-            List<Chicken> filteredChickens = getChickens().stream()
-                    .filter(chicken -> String.valueOf(chicken.getCost()).contains(costFilter.getValue()))
-                    .toList();
-            grid.setItems(filteredChickens);
-        });
-        filterRow.getCell(grid.getColumnByKey("cost")).setComponent(costFilter);
-    }
-
-    private void addCountFilter(HeaderRow filterRow) {
-        TextField countFilter = new TextField();
-        countFilter.setPlaceholder("Фильтр по количеству");
-        countFilter.setClearButtonVisible(true);
-        countFilter.setValueChangeMode(ValueChangeMode.EAGER);
-        countFilter.addValueChangeListener(event -> {
-            List<Chicken> filteredChickens = getChickens().stream()
-                    .filter(chicken -> String.valueOf(chicken.getCount()).contains(countFilter.getValue()))
-                    .toList();
-            grid.setItems(filteredChickens);
-        });
-        filterRow.getCell(grid.getColumnByKey("count")).setComponent(countFilter);
-    }
-
-    private void addDateFilter(HeaderRow filterRow) {
-        DatePicker dateFilter = new DatePicker();
-        dateFilter.setPlaceholder("Фильтр по дате");
-        dateFilter.setClearButtonVisible(true);
-        dateFilter.addValueChangeListener(event -> {
-            List<Chicken> filteredChickens = getChickens().stream()
-                    .filter(chicken -> {
-                        LocalDate filterDate = dateFilter.getValue();
-                        return filterDate == null || chicken.getDate().isEqual(filterDate);
-                    })
-                    .toList();
-            grid.setItems(filteredChickens);
-        });
-        filterRow.getCell(grid.getColumnByKey("date")).setComponent(dateFilter);
-    }
-
-    private void addStatusFilter(HeaderRow filterRow) {
-        TextField statusFilter = new TextField();
-        statusFilter.setPlaceholder("Фильтр по статусу");
-        statusFilter.setClearButtonVisible(true);
-        statusFilter.setValueChangeMode(ValueChangeMode.EAGER);
-        statusFilter.addValueChangeListener(event -> {
-            String filterValue = statusFilter.getValue().toLowerCase();
-            List<Chicken> filteredChickens = getChickens().stream()
-                    .filter(chicken -> chicken.getStatus().name().toLowerCase().contains(filterValue))
-                    .toList();
-            grid.setItems(filteredChickens);
-        });
-        filterRow.getCell(grid.getColumnByKey("status")).setComponent(statusFilter);
+    private void addChickenToGrid(Chicken newChicken) {
+        List<Chicken> updatedChickens = new ArrayList<>(getChickens());
+        updatedChickens.add(newChicken);
+        grid.setItems(updatedChickens);
     }
 
     private List<Chicken> getChickens() {
-        return Arrays.asList(
+        chickens = Arrays.asList(
                 new Chicken(1, "Chicken 1", 100, Status.EXPIRED, 10, LocalDate.now()),
                 new Chicken(2, "Chicken 2", 150, Status.FOR_SALE, 5, LocalDate.now().minusDays(1)),
                 new Chicken(3, "Chicken 3", 200, Status.FOR_SALE, 20, LocalDate.now().minusDays(2))
         );
+        return chickens;
     }
 }
