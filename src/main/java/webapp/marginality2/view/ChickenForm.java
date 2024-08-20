@@ -10,7 +10,6 @@ import com.vaadin.flow.component.notification.Notification;
 import webapp.marginality2.model.Chicken;
 import webapp.marginality2.model.Status;
 
-import java.time.LocalDate;
 import java.util.function.Consumer;
 
 public class ChickenForm extends VerticalLayout {
