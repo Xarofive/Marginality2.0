@@ -5,19 +5,19 @@ import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.value.ValueChangeMode;
-import webapp.marginality2.model.Chicken;
+import webapp.marginality2.model.Meal;
 
 import java.time.LocalDate;
 import java.util.List;
 
-public class ChickenGridFilters {
+public class MealGridFilters {
 
-    private final Grid<Chicken> grid;
-    private final List<Chicken> chickens;
+    private final Grid<Meal> grid;
+    private final List<Meal> meals;
 
-    public ChickenGridFilters(Grid<Chicken> grid, List<Chicken> chickens) {
+    public MealGridFilters(Grid<Meal> grid, List<Meal> meals) {
         this.grid = grid;
-        this.chickens = chickens;
+        this.meals = meals;
     }
 
     public void addFiltersToGrid() {
@@ -35,10 +35,10 @@ public class ChickenGridFilters {
         nameFilter.setClearButtonVisible(true);
         nameFilter.setValueChangeMode(ValueChangeMode.EAGER);
         nameFilter.addValueChangeListener(event -> {
-            List<Chicken> filteredChickens = chickens.stream()
+            List<Meal> filteredMeals = meals.stream()
                     .filter(chicken -> chicken.getName().toLowerCase().contains(nameFilter.getValue().toLowerCase()))
                     .toList();
-            grid.setItems(filteredChickens);
+            grid.setItems(filteredMeals);
         });
         filterRow.getCell(grid.getColumnByKey("name")).setComponent(nameFilter);
     }
@@ -49,10 +49,10 @@ public class ChickenGridFilters {
         costFilter.setClearButtonVisible(true);
         costFilter.setValueChangeMode(ValueChangeMode.EAGER);
         costFilter.addValueChangeListener(event -> {
-            List<Chicken> filteredChickens = chickens.stream()
+            List<Meal> filteredMeals = meals.stream()
                     .filter(chicken -> String.valueOf(chicken.getCost()).contains(costFilter.getValue()))
                     .toList();
-            grid.setItems(filteredChickens);
+            grid.setItems(filteredMeals);
         });
         filterRow.getCell(grid.getColumnByKey("cost")).setComponent(costFilter);
     }
@@ -63,10 +63,10 @@ public class ChickenGridFilters {
         countFilter.setClearButtonVisible(true);
         countFilter.setValueChangeMode(ValueChangeMode.EAGER);
         countFilter.addValueChangeListener(event -> {
-            List<Chicken> filteredChickens = chickens.stream()
+            List<Meal> filteredMeals = meals.stream()
                     .filter(chicken -> String.valueOf(chicken.getCount()).contains(countFilter.getValue()))
                     .toList();
-            grid.setItems(filteredChickens);
+            grid.setItems(filteredMeals);
         });
         filterRow.getCell(grid.getColumnByKey("count")).setComponent(countFilter);
     }
@@ -76,13 +76,13 @@ public class ChickenGridFilters {
         dateFilter.setPlaceholder("Фильтр по дате");
         dateFilter.setClearButtonVisible(true);
         dateFilter.addValueChangeListener(event -> {
-            List<Chicken> filteredChickens = chickens.stream()
+            List<Meal> filteredMeals = meals.stream()
                     .filter(chicken -> {
                         LocalDate filterDate = dateFilter.getValue();
                         return filterDate == null || chicken.getDate().isEqual(filterDate);
                     })
                     .toList();
-            grid.setItems(filteredChickens);
+            grid.setItems(filteredMeals);
         });
         filterRow.getCell(grid.getColumnByKey("date")).setComponent(dateFilter);
     }
@@ -94,10 +94,10 @@ public class ChickenGridFilters {
         statusFilter.setValueChangeMode(ValueChangeMode.EAGER);
         statusFilter.addValueChangeListener(event -> {
             String filterValue = statusFilter.getValue().toLowerCase();
-            List<Chicken> filteredChickens = chickens.stream()
+            List<Meal> filteredMeals = meals.stream()
                     .filter(chicken -> chicken.getStatus().name().toLowerCase().contains(filterValue))
                     .toList();
-            grid.setItems(filteredChickens);
+            grid.setItems(filteredMeals);
         });
         filterRow.getCell(grid.getColumnByKey("status")).setComponent(statusFilter);
     }

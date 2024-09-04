@@ -8,25 +8,27 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteAlias;
-import webapp.marginality2.model.Chicken;
-import webapp.marginality2.model.Status;
+import webapp.marginality2.model.Meal;
+import webapp.marginality2.service.MealService;
 
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 @PageTitle("Chicken Grid")
 @Route(value = "")
 @RouteAlias(value = "")
-public class ChickenGridView extends Div {
+public class MealGridView extends Div {
 
-    private final Grid<Chicken> grid;
-    private List<Chicken> chickens;
+    private final MealService mealService;
+    private final Grid<Meal> grid;
+    private final List<Meal> meals;
 
-    public ChickenGridView() {
+    public MealGridView(MealService mealService) {
+        this.mealService = mealService;
         addClassName("chicken-grid-view");
         setSizeFull();
+
+        // Загружаем данные из базы данных один раз
+        this.meals = getMeal();
 
         grid = createGrid();
         grid.setWidth("90%");
@@ -35,25 +37,26 @@ public class ChickenGridView extends Div {
         gridAndButtonsLayout.setSizeFull();
         gridAndButtonsLayout.setFlexGrow(1, grid);
 
-        ChickenForm chickenForm = new ChickenForm(this::addChickenToGrid);
+        MealForm mealForm = new MealForm(this::addChickenToGrid, this.mealService);
 
-        VerticalLayout mainLayout = new VerticalLayout(gridAndButtonsLayout, chickenForm);
+        VerticalLayout mainLayout = new VerticalLayout(gridAndButtonsLayout, mealForm);
         mainLayout.setSizeFull();
         mainLayout.setFlexGrow(1, gridAndButtonsLayout);
 
         add(mainLayout);
 
-        ChickenGridFilters filters = new ChickenGridFilters(grid, getChickens());
+        MealGridFilters filters = new MealGridFilters(grid, meals);
         filters.addFiltersToGrid();
     }
 
-    private Grid<Chicken> createGrid() {
-        Grid<Chicken> grid = new Grid<>(Chicken.class);
+    private Grid<Meal> createGrid() {
+        Grid<Meal> grid = new Grid<>(Meal.class);
         grid.setSelectionMode(Grid.SelectionMode.MULTI);
         grid.addThemeVariants(GridVariant.LUMO_NO_BORDER, GridVariant.LUMO_COLUMN_BORDERS);
         grid.setHeight("100%");
 
-        grid.setItems(getChickens());
+        // Используем загруженные данные
+        grid.setItems(meals);
 
         grid.setColumns("name", "cost", "count", "date");
 
@@ -63,47 +66,42 @@ public class ChickenGridView extends Div {
         return grid;
     }
 
-    private void configureColumns(Grid<Chicken> grid) {
+    private void configureColumns(Grid<Meal> grid) {
         grid.getColumnByKey("name").setHeader("Название").setSortable(true);
         grid.getColumnByKey("cost").setHeader("Цена").setSortable(true);
         grid.getColumnByKey("count").setHeader("Кол-во").setSortable(true);
         grid.getColumnByKey("date").setHeader("Дата").setSortable(true);
 
-        grid.addColumn(Chicken::getStatus)
+        grid.addColumn(Meal::getStatus)
                 .setHeader("Статус")
                 .setSortable(true)
                 .setKey("status");
     }
 
-    private void addButtonsColumn(Grid<Chicken> grid) {
-        ChickenEditorDialog editorDialog = new ChickenEditorDialog(this::saveEditedChicken);
-        grid.addColumn(new ButtonsRenderer(grid, getChickens(), editorDialog::openEditor))
+    private void addButtonsColumn(Grid<Meal> grid) {
+        MealEditorDialog editorDialog = new MealEditorDialog(this::saveEditedMeal);
+        grid.addColumn(new ButtonsRenderer(grid, meals, editorDialog::openEditor))
                 .setHeader("Действия")
                 .setKey("actions")
                 .setAutoWidth(true);
     }
 
-    private void saveEditedChicken(Chicken editedChicken) {
-        List<Chicken> updatedChickens = new ArrayList<>(getChickens());
-        int index = updatedChickens.indexOf(editedChicken);
+    private void saveEditedMeal(Meal editedMeal) {
+        int index = meals.indexOf(editedMeal);
         if (index >= 0) {
-            updatedChickens.set(index, editedChicken);
+            meals.set(index, editedMeal);
         }
-        grid.setItems(updatedChickens);
+        grid.setItems(meals);
     }
 
-    private void addChickenToGrid(Chicken newChicken) {
-        List<Chicken> updatedChickens = new ArrayList<>(getChickens());
-        updatedChickens.add(newChicken);
-        grid.setItems(updatedChickens);
+    private void addChickenToGrid(Meal newMeal) {
+        meals.add(newMeal);
+        grid.setItems(meals);
     }
 
-    private List<Chicken> getChickens() {
-        chickens = Arrays.asList(
-                new Chicken(1, "Chicken 1", 100, Status.EXPIRED, 10, LocalDate.now()),
-                new Chicken(2, "Chicken 2", 150, Status.FOR_SALE, 5, LocalDate.now().minusDays(1)),
-                new Chicken(3, "Chicken 3", 200, Status.FOR_SALE, 20, LocalDate.now().minusDays(2))
-        );
-        return chickens;
+    private List<Meal> getMeal() {
+        return mealService.findAll()
+                .collectList()
+                .block();
     }
 }

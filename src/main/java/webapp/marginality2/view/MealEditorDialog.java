@@ -8,12 +8,12 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.select.Select;
-import webapp.marginality2.model.Chicken;
+import webapp.marginality2.model.Meal;
 import webapp.marginality2.model.Status;
 
 import java.util.function.Consumer;
 
-public class ChickenEditorDialog extends Dialog {
+public class MealEditorDialog extends Dialog {
 
     private final TextField nameField = new TextField("Название");
     private final TextField costField = new TextField("Цена");
@@ -23,9 +23,9 @@ public class ChickenEditorDialog extends Dialog {
     private final Button saveButton = new Button("Сохранить");
     private final Button cancelButton = new Button("Отменить");
 
-    private Chicken chicken;
+    private Meal meal;
 
-    public ChickenEditorDialog(Consumer<Chicken> saveConsumer) {
+    public MealEditorDialog(Consumer<Meal> saveConsumer) {
         configureForm();
         configureButtons(saveConsumer);
         add(createFormLayout(), createButtonLayout());
@@ -47,16 +47,16 @@ public class ChickenEditorDialog extends Dialog {
         return new HorizontalLayout(saveButton, cancelButton);
     }
 
-    private void configureButtons(Consumer<Chicken> saveConsumer) {
+    private void configureButtons(Consumer<Meal> saveConsumer) {
         saveButton.addClickListener(event -> {
             if (validateForm()) {
-                chicken.setName(nameField.getValue());
-                chicken.setCost(Integer.parseInt(costField.getValue()));
-                chicken.setCount(Integer.parseInt(countField.getValue()));
-                chicken.setStatus(statusSelect.getValue());
-                chicken.setDate(datePicker.getValue());
+                meal.setName(nameField.getValue());
+                meal.setCost(Integer.parseInt(costField.getValue()));
+                meal.setCount(Integer.parseInt(countField.getValue()));
+                meal.setStatus(statusSelect.getValue());
+                meal.setDate(datePicker.getValue());
 
-                saveConsumer.accept(chicken);
+                saveConsumer.accept(meal);
                 close();
                 Notification.show("Изменения сохранены");
             } else {
@@ -77,13 +77,13 @@ public class ChickenEditorDialog extends Dialog {
         }
     }
 
-    public void openEditor(Chicken chicken) {
-        this.chicken = chicken;
-        nameField.setValue(chicken.getName());
-        costField.setValue(String.valueOf(chicken.getCost()));
-        countField.setValue(String.valueOf(chicken.getCount()));
-        statusSelect.setValue(chicken.getStatus());
-        datePicker.setValue(chicken.getDate());
+    public void openEditor(Meal meal) {
+        this.meal = meal;
+        nameField.setValue(meal.getName());
+        costField.setValue(String.valueOf(meal.getCost()));
+        countField.setValue(String.valueOf(meal.getCount()));
+        statusSelect.setValue(meal.getStatus());
+        datePicker.setValue(meal.getDate());
 
         open();
     }

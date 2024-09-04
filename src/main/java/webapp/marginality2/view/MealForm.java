@@ -7,12 +7,15 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.notification.Notification;
-import webapp.marginality2.model.Chicken;
+import webapp.marginality2.model.Meal;
 import webapp.marginality2.model.Status;
+import webapp.marginality2.service.MealService;
 
 import java.util.function.Consumer;
 
-public class ChickenForm extends VerticalLayout {
+public class MealForm extends VerticalLayout {
+
+    private final MealService mealService;
 
     private final TextField nameField = new TextField("Название");
     private final TextField costField = new TextField("Цена");
@@ -20,9 +23,10 @@ public class ChickenForm extends VerticalLayout {
     private final Select<Status> statusSelect = new Select<>();
     private final DatePicker datePicker = new DatePicker("Дата");
 
-    public ChickenForm(Consumer<Chicken> addChickenConsumer) {
+    public MealForm(Consumer<Meal> addChickenConsumer, MealService mealService) {
         configureFields();
         add(createFormLayout(), createAddButton(addChickenConsumer));
+        this.mealService = mealService;
     }
 
     private void configureFields() {
@@ -37,10 +41,10 @@ public class ChickenForm extends VerticalLayout {
         return fieldsLayout;
     }
 
-    private Button createAddButton(Consumer<Chicken> addChickenConsumer) {
+    private Button createAddButton(Consumer<Meal> addChickenConsumer) {
         return new Button("Добавить", event -> {
             if (validateForm()) {
-                Chicken newChicken = new Chicken(
+                Meal newMeal = new Meal(
                         0,
                         nameField.getValue(),
                         Integer.parseInt(costField.getValue()),
@@ -48,8 +52,15 @@ public class ChickenForm extends VerticalLayout {
                         Integer.parseInt(countField.getValue()),
                         datePicker.getValue()
                 );
-                addChickenConsumer.accept(newChicken);
-                clearForm();
+
+                mealService.create(newMeal).subscribe(savedChicken -> {
+                    addChickenConsumer.accept(savedChicken);
+                    clearForm();
+                    Notification.show("Запись успешно сохранена!");
+                }, error -> {
+                    Notification.show("Ошибка при сохранении записи: " + error.getMessage(), 5000, Notification.Position.MIDDLE);
+                });
+
             } else {
                 Notification.show("Пожалуйста, заполните все поля.");
             }

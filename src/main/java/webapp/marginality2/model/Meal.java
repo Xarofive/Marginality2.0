@@ -11,8 +11,8 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @Table
 @Data
-public class Meat extends AbstractEntity {
-    public Meat(int id, String name, int cost, Status status, int count, LocalDate date) {
+public class Meal extends AbstractEntity {
+    public Meal(int id, String name, int cost, Status status, int count, LocalDate date) {
         super(id, name, cost, status, count, date);
     }
 }

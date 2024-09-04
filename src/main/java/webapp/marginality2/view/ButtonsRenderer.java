@@ -85,34 +85,34 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
-import webapp.marginality2.model.Chicken;
+import webapp.marginality2.model.Meal;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-public class ButtonsRenderer extends ComponentRenderer<Div, Chicken> {
+public class ButtonsRenderer extends ComponentRenderer<Div, Meal> {
 
-    private final Grid<Chicken> grid;
-    private final List<Chicken> chickens;
-    private final Consumer<Chicken> editConsumer;
+    private final Grid<Meal> grid;
+    private final List<Meal> meals;
+    private final Consumer<Meal> editConsumer;
 
-    public ButtonsRenderer(Grid<Chicken> grid, List<Chicken> chickens, Consumer<Chicken> editConsumer) {
+    public ButtonsRenderer(Grid<Meal> grid, List<Meal> meals, Consumer<Meal> editConsumer) {
         super(Div::new, (div, chicken) -> {
-            ButtonsRenderer renderer = new ButtonsRenderer(grid, chickens, editConsumer);
+            ButtonsRenderer renderer = new ButtonsRenderer(grid, meals, editConsumer);
             div.add(renderer.createButtonLayout(chicken));
         });
         this.grid = grid;
-        this.chickens = chickens;
+        this.meals = meals;
         this.editConsumer = editConsumer;
     }
 
-    private HorizontalLayout createButtonLayout(Chicken chicken) {
-        HorizontalLayout buttonLayout = new HorizontalLayout(createDeleteButton(chicken), createEditButton(chicken));
+    private HorizontalLayout createButtonLayout(Meal meal) {
+        HorizontalLayout buttonLayout = new HorizontalLayout(createDeleteButton(meal), createEditButton(meal));
         return buttonLayout;
     }
 
-    private Button createDeleteButton(Chicken chicken) {
+    private Button createDeleteButton(Meal meal) {
         Button deleteButton = new Button("Удалить");
         deleteButton.getElement().getStyle().set("background-color", "red");
         deleteButton.getElement().getStyle().set("color", "white");
@@ -123,9 +123,9 @@ public class ButtonsRenderer extends ComponentRenderer<Div, Chicken> {
             confirmation.setDuration(5000);
 
             Button confirmButton = new Button("Да", e -> {
-                List<Chicken> updatedChickens = new ArrayList<>(chickens);
-                updatedChickens.remove(chicken);
-                grid.setItems(updatedChickens);
+                List<Meal> updatedMeals = new ArrayList<>(meals);
+                updatedMeals.remove(meal);
+                grid.setItems(updatedMeals);
                 confirmation.close();
                 Notification.show("Запись удалена");
             });
@@ -144,13 +144,13 @@ public class ButtonsRenderer extends ComponentRenderer<Div, Chicken> {
         return deleteButton;
     }
 
-    private Button createEditButton(Chicken chicken) {
+    private Button createEditButton(Meal meal) {
         Button editButton = new Button("Редактировать");
         editButton.getElement().getStyle().set("background-color", "blue");
         editButton.getElement().getStyle().set("color", "white");
 
         editButton.addClickListener(event -> {
-            editConsumer.accept(chicken);
+            editConsumer.accept(meal);
         });
 
         return editButton;

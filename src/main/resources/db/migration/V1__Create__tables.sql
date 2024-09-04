@@ -1,35 +1,19 @@
-DROP TABLE IF EXISTS CHICKEN;
+DROP TABLE IF EXISTS MEAL;
 
-CREATE TABLE CHICKEN
+CREATE TABLE MEAL
 (
-    id          INT PRIMARY KEY AUTO_INCREMENT,
-    name        VARCHAR(255),
-    cost        INT,
-    is_for_sale BOOLEAN,
-    count       INT,
-    date        DATE
+    id     INT PRIMARY KEY AUTO_INCREMENT,
+    name   VARCHAR(255),
+    cost   INT,
+    status VARCHAR(50),
+    count  INT,
+    date   DATE,
+    CONSTRAINT status_check CHECK (status IN ('FOR_SALE', 'SOLD', 'EXPIRED', 'STORAGE', 'DAMAGED'))
 );
 
-DROP TABLE IF EXISTS EGG;
-
-CREATE TABLE EGG
-(
-    id          INT PRIMARY KEY AUTO_INCREMENT,
-    name        VARCHAR(255),
-    cost        INT,
-    is_for_sale BOOLEAN,
-    count       INT,
-    date        DATE
-);
-
-DROP TABLE IF EXISTS MEAT;
-
-CREATE TABLE MEAT
-(
-    id          INT PRIMARY KEY AUTO_INCREMENT,
-    name        VARCHAR(255),
-    cost        INT,
-    is_for_sale BOOLEAN,
-    count       INT,
-    date        DATE
-);
+INSERT INTO MEAL (name, cost, status, count, date)
+VALUES ('Meal 1', 100, 'FOR_SALE', 10, '2024-08-01'),
+       ('Meal 2', 150, 'SOLD', 5, '2024-08-02'),
+       ('Meal 3', 200, 'EXPIRED', 20, '2024-08-03'),
+       ('Meal 4', 80, 'STORAGE', 15, '2024-08-04'),
+       ('Meal 5', 120, 'DAMAGED', 8, '2024-08-05');

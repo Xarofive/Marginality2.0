@@ -4,5 +4,6 @@ public enum Status {
     SOLD,
     EXPIRED,
     FOR_SALE,
-    STORAGE
+    STORAGE,
+    DAMAGED
 }
