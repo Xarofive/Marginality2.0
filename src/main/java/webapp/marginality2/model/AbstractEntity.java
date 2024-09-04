@@ -16,15 +16,15 @@ public abstract class AbstractEntity {
     private int id;
     private String name;
     private int cost;
-    private boolean isForSale;
+    private Status status;
     private int count;
     private LocalDate date;
 
-    protected AbstractEntity(int id, String name, int cost, boolean isForSale, int count, LocalDate data) {
+    protected AbstractEntity(int id, String name, int cost, Status isForSale, int count, LocalDate data) {
         this.id = id;
         this.name = name;
         this.cost = cost;
-        this.isForSale = isForSale;
+        this.status = isForSale;
         this.count = count;
         this.date = data;
     }
