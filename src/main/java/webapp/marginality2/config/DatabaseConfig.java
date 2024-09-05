@@ -25,6 +25,7 @@ public class DatabaseConfig extends AbstractR2dbcConfiguration {
     private String password;
 
 
+
     @Bean
     @Override
     public ConnectionFactory connectionFactory() {
