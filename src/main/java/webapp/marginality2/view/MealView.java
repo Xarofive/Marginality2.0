@@ -6,6 +6,7 @@ import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.HeaderRow;
+import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -15,6 +16,7 @@ import com.vaadin.flow.data.converter.StringToIntegerConverter;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.UI;
+import com.vaadin.flow.component.dependency.JavaScript;
 
 import webapp.marginality2.model.Meal;
 import webapp.marginality2.model.Status;
@@ -23,8 +25,10 @@ import webapp.marginality2.service.MealServiceImpl;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Route("")
+@JavaScript("https://cdn.jsdelivr.net/npm/chart.js") // Подключаем Chart.js
 public class MealView extends VerticalLayout {
 
     private final MealServiceImpl mealService;
@@ -36,9 +40,12 @@ public class MealView extends VerticalLayout {
     private ComboBox<Status> statusComboBox = new ComboBox<>();
     private DatePicker datePicker = new DatePicker();
 
-    private TextField profitResultField = new TextField("Прибыль"); // Поле для отображения общей прибыли
-    private Span currentTime = new Span(); // Поле для отображения текущего времени
-    private DatePicker currentDate = new DatePicker(); // Календарь для текущей даты
+    private TextField profitResultField = new TextField("Прибыль");
+    private Span currentTime = new Span();
+    private DatePicker currentDate = new DatePicker();
+
+    // Контейнер для графика
+    private Div chartDiv = new Div();
 
     public MealView(MealServiceImpl mealService) {
         this.mealService = mealService;
@@ -47,30 +54,38 @@ public class MealView extends VerticalLayout {
         configureDateTimeDisplay(); // Настройка времени и даты
 
         // Настраиваем поле прибыли
-        profitResultField.setReadOnly(true); // Поле только для чтения
-        profitResultField.getStyle().set("font-size", "20px"); // Настройка стиля
-        profitResultField.setWidthFull(); // Растягиваем поле по ширине
+        profitResultField.setReadOnly(true);
+        profitResultField.getStyle().set("font-size", "20px");
+        profitResultField.setWidthFull();
 
-        add(grid, profitResultField); // Добавляем таблицу и поле прибыли
-        updateGridItems();
+        // Настраиваем диаграмму
+        chartDiv.setId("chart-container");
+        chartDiv.setWidth("400px");
+        chartDiv.setHeight("400px");
 
-        // Добавляем время и календарь снизу под таблицу и поле прибыли
-        HorizontalLayout timeLayout = new HorizontalLayout();
-        timeLayout.setWidthFull();
-        timeLayout.setJustifyContentMode(JustifyContentMode.CENTER);
-        timeLayout.add(currentTime);
+        // Создаем горизонтальный слой для даты, времени и диаграммы
+        HorizontalLayout dateTimeAndChartLayout = new HorizontalLayout();
+        dateTimeAndChartLayout.setWidthFull();
 
-        HorizontalLayout dateLayout = new HorizontalLayout();
-        dateLayout.setWidthFull();
+        // Выравниваем текущую дату и время по центру
+        HorizontalLayout dateLayout = new HorizontalLayout(currentDate);
         dateLayout.setJustifyContentMode(JustifyContentMode.CENTER);
-        dateLayout.add(currentDate);
 
-        add(timeLayout);
-        add(dateLayout);
+        HorizontalLayout timeLayout = new HorizontalLayout(currentTime);
+        timeLayout.setJustifyContentMode(JustifyContentMode.CENTER);
+        timeLayout.setAlignItems(Alignment.CENTER);
+
+        // Добавляем диаграмму в правую часть
+        dateTimeAndChartLayout.add(dateLayout, chartDiv);
+        dateTimeAndChartLayout.setAlignItems(Alignment.STRETCH); // Выравниваем все по центру по вертикали
+
+        // Добавляем элементы на экран
+        add(grid, profitResultField, timeLayout, dateTimeAndChartLayout); // Теперь диаграмма и дата с временем в одном слое
+        updateGridItems();
     }
 
     private void configureGrid() {
-        grid.removeColumnByKey("id"); // Убираем колонку с id
+        grid.removeColumnByKey("id");
         grid.setColumns("name", "cost", "profit", "count", "status", "date");
 
         // Переводим названия колонок на русский
@@ -81,53 +96,43 @@ public class MealView extends VerticalLayout {
         grid.getColumnByKey("status").setHeader("Статус");
         grid.getColumnByKey("date").setHeader("Дата");
 
-        // Увеличиваем размер заголовков столбцов
-        grid.getColumns().forEach(column -> column.getElement().getStyle().set("font-size", "20px"));
-
         // Фильтры над каждым полем
         HeaderRow filterRow = grid.appendHeaderRow();
 
-        // Фильтр по имени
         nameField.setPlaceholder("Фильтр по имени...");
         nameField.setClearButtonVisible(true);
         nameField.addValueChangeListener(e -> updateGridItems());
         filterRow.getCell(grid.getColumnByKey("name")).setComponent(nameField);
 
-        // Фильтр по стоимости
         costField.setPlaceholder("Фильтр по стоимости...");
         costField.setClearButtonVisible(true);
         costField.addValueChangeListener(e -> updateGridItems());
         filterRow.getCell(grid.getColumnByKey("cost")).setComponent(costField);
 
-        // Фильтр по прибыли
         profitField.setPlaceholder("Фильтр по прибыли...");
         profitField.setClearButtonVisible(true);
         profitField.addValueChangeListener(e -> updateGridItems());
         filterRow.getCell(grid.getColumnByKey("profit")).setComponent(profitField);
 
-        // Фильтр по количеству
         countField.setPlaceholder("Фильтр по количеству...");
         countField.setClearButtonVisible(true);
         countField.addValueChangeListener(e -> updateGridItems());
         filterRow.getCell(grid.getColumnByKey("count")).setComponent(countField);
 
-        // Фильтр по статусу
         statusComboBox.setItems(Status.values());
         statusComboBox.setPlaceholder("Фильтр по статусу...");
         statusComboBox.addValueChangeListener(e -> updateGridItems());
         filterRow.getCell(grid.getColumnByKey("status")).setComponent(statusComboBox);
 
-        // Фильтр по дате
         datePicker.setPlaceholder("Фильтр по дате...");
         datePicker.addValueChangeListener(e -> updateGridItems());
         filterRow.getCell(grid.getColumnByKey("date")).setComponent(datePicker);
 
-        // Редактирование конкретного поля
+        // Добавляем редактирование
         Binder<Meal> binder = new Binder<>(Meal.class);
         grid.getEditor().setBinder(binder);
         grid.getEditor().setBuffered(true);
 
-        // Добавляем редактирование для каждого поля отдельно
         TextField nameEditor = new TextField();
         binder.forField(nameEditor).bind(Meal::getName, Meal::setName);
         grid.getColumnByKey("name").setEditorComponent(nameEditor);
@@ -257,6 +262,7 @@ public class MealView extends VerticalLayout {
                         meals -> {
                             grid.setItems(meals);
                             updateProfitField(meals);
+                            updatePieChart(meals); // Обновляем диаграмму
                         },
                         error -> Notification.show("Error fetching meals: " + error.getMessage())
                 );
@@ -275,24 +281,49 @@ public class MealView extends VerticalLayout {
     private void configureDateTimeDisplay() {
         HorizontalLayout dateTimeLayout = new HorizontalLayout();
 
-        // Настройка времени
         currentTime.getStyle().set("font-size", "20px");
         dateTimeLayout.add(currentTime);
 
-        // Настройка текущей даты
         currentDate.setLabel("Сегодняшняя дата");
         currentDate.setValue(LocalDateTime.now().toLocalDate());
         dateTimeLayout.add(currentDate);
 
-        // Обновление времени каждые секунду
         UI ui = UI.getCurrent();
-        ui.setPollInterval(1000); // Обновляем каждую секунду
+        ui.setPollInterval(1000);
         ui.addPollListener(pollEvent -> {
             String formattedTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"));
             currentTime.setText("Текущее время: " + formattedTime);
         });
 
-        // Добавляем компоненты времени и даты в интерфейс
         add(dateTimeLayout);
+    }
+
+    // Метод для обновления данных диаграммы
+    private void updatePieChart(List<Meal> meals) {
+        String labels = meals.stream().map(Meal::getName).collect(Collectors.joining("\", \"", "[\"", "\"]"));
+        String data = meals.stream().map(Meal::getCount).map(String::valueOf).collect(Collectors.joining(", ", "[", "]"));
+
+        // Обновляем диаграмму с помощью Chart.js
+        UI.getCurrent().getPage().executeJs(
+                "var ctx = document.getElementById('chart-container').querySelector('canvas');" +
+                        "if (!ctx) {" +
+                        "  ctx = document.createElement('canvas');" +
+                        "  document.getElementById('chart-container').appendChild(ctx);" +
+                        "}" +
+                        "if (window.myChart) window.myChart.destroy();" + // Удаляем предыдущий график, если он был
+                        "window.myChart = new Chart(ctx, {" +
+                        "    type: 'pie'," +
+                        "    data: {" +
+                        "        labels: " + labels + "," +
+                        "        datasets: [{" +
+                        "            data: " + data + "," +
+                        "            backgroundColor: ['#ff6384', '#36a2eb', '#cc65fe', '#ffce56']" +
+                        "        }]" +
+                        "    }," +
+                        "    options: {" +
+                        "        responsive: true" +
+                        "    }" +
+                        "});"
+        );
     }
 }
