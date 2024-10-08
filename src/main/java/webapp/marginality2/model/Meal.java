@@ -12,7 +12,7 @@ import java.time.LocalDate;
 @Table
 @Data
 public class Meal extends AbstractEntity {
-    public Meal(int id, String name, int cost, Status status, int count, LocalDate date) {
-        super(id, name, cost, status, count, date);
+    public Meal(int id, int cost, int profit, int count, String name, Status status, LocalDate date) {
+        super(id, cost, profit, count, name, status, date);
     }
 }

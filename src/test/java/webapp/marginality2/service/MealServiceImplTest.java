@@ -31,7 +31,7 @@ class MealServiceImplTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        meal = new Meal(1, "Pizza", 10, Status.FOR_SALE, 5, LocalDate.now());
+        meal = new Meal(1, 200, 100, 1, "test", Status.EXPIRED, LocalDate.now());
     }
 
     @Test
@@ -73,7 +73,7 @@ class MealServiceImplTest {
         when(mealReactiveRepository.findById(anyInt())).thenReturn(Mono.just(meal));
         when(mealReactiveRepository.save(any(Meal.class))).thenReturn(Mono.just(meal));
 
-        Meal updatedMeal = new Meal(1, "Updated Pizza", 12, Status.FOR_SALE, 3, LocalDate.now());
+        Meal updatedMeal = new Meal(1, 200, 100, 1, "test", Status.EXPIRED, LocalDate.now());
 
         StepVerifier.create(mealService.update(1, updatedMeal))
                 .expectNext(meal)
@@ -87,7 +87,7 @@ class MealServiceImplTest {
     void testUpdateMealNotFound() {
         when(mealReactiveRepository.findById(anyInt())).thenReturn(Mono.empty());
 
-        Meal updatedMeal = new Meal(1, "Updated Pizza", 12, Status.FOR_SALE, 3, LocalDate.now());
+        Meal updatedMeal = new Meal(1, 200, 100, 1, "test", Status.EXPIRED, LocalDate.now());
 
         StepVerifier.create(mealService.update(1, updatedMeal))
                 .expectErrorMatches(throwable -> throwable instanceof IllegalArgumentException &&
