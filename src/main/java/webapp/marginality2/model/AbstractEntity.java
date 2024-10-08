@@ -14,19 +14,21 @@ import java.util.Objects;
 public abstract class AbstractEntity {
     @Id
     private int id;
-    private String name;
     private int cost;
-    private Status status;
+    private int profit;
     private int count;
+    private String name;
+    private Status status;
     private LocalDate date;
 
-    protected AbstractEntity(int id, String name, int cost, Status isForSale, int count, LocalDate data) {
+    protected AbstractEntity(int id, int cost, int profit, int count, String name, Status status, LocalDate date) {
         this.id = id;
-        this.name = name;
         this.cost = cost;
-        this.status = isForSale;
+        this.profit = profit;
         this.count = count;
-        this.date = data;
+        this.name = name;
+        this.status = status;
+        this.date = date;
     }
 
     @Override
