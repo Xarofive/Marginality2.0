@@ -7,15 +7,21 @@ import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.converter.StringToIntegerConverter;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.UI;
+
 import webapp.marginality2.model.Meal;
 import webapp.marginality2.model.Status;
 import webapp.marginality2.service.MealServiceImpl;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Route("")
@@ -31,11 +37,14 @@ public class MealView extends VerticalLayout {
     private DatePicker datePicker = new DatePicker();
 
     private TextField profitResultField = new TextField("Прибыль"); // Поле для отображения общей прибыли
+    private Span currentTime = new Span(); // Поле для отображения текущего времени
+    private DatePicker currentDate = new DatePicker(); // Календарь для текущей даты
 
     public MealView(MealServiceImpl mealService) {
         this.mealService = mealService;
         configureGrid();
         configureToolbar();
+        configureDateTimeDisplay(); // Настройка времени и даты
 
         // Настраиваем поле прибыли
         profitResultField.setReadOnly(true); // Поле только для чтения
@@ -44,11 +53,33 @@ public class MealView extends VerticalLayout {
 
         add(grid, profitResultField); // Добавляем таблицу и поле прибыли
         updateGridItems();
+
+        // Добавляем время и календарь снизу под таблицу и поле прибыли
+        HorizontalLayout timeLayout = new HorizontalLayout();
+        timeLayout.setWidthFull();
+        timeLayout.setJustifyContentMode(JustifyContentMode.CENTER);
+        timeLayout.add(currentTime);
+
+        HorizontalLayout dateLayout = new HorizontalLayout();
+        dateLayout.setWidthFull();
+        dateLayout.setJustifyContentMode(JustifyContentMode.CENTER);
+        dateLayout.add(currentDate);
+
+        add(timeLayout);
+        add(dateLayout);
     }
 
     private void configureGrid() {
         grid.removeColumnByKey("id"); // Убираем колонку с id
         grid.setColumns("name", "cost", "profit", "count", "status", "date");
+
+        // Переводим названия колонок на русский
+        grid.getColumnByKey("name").setHeader("Наименование");
+        grid.getColumnByKey("cost").setHeader("Цена закупки");
+        grid.getColumnByKey("profit").setHeader("Цена продажи");
+        grid.getColumnByKey("count").setHeader("Количество");
+        grid.getColumnByKey("status").setHeader("Статус");
+        grid.getColumnByKey("date").setHeader("Дата");
 
         // Увеличиваем размер заголовков столбцов
         grid.getColumns().forEach(column -> column.getElement().getStyle().set("font-size", "20px"));
@@ -81,7 +112,7 @@ public class MealView extends VerticalLayout {
         filterRow.getCell(grid.getColumnByKey("count")).setComponent(countField);
 
         // Фильтр по статусу
-        statusComboBox.setItems(Status.values()); // Добавляем возможные значения для ComboBox
+        statusComboBox.setItems(Status.values());
         statusComboBox.setPlaceholder("Фильтр по статусу...");
         statusComboBox.addValueChangeListener(e -> updateGridItems());
         filterRow.getCell(grid.getColumnByKey("status")).setComponent(statusComboBox);
@@ -113,9 +144,8 @@ public class MealView extends VerticalLayout {
         binder.forField(countEditor).withConverter(new StringToIntegerConverter("Введите число")).bind(Meal::getCount, Meal::setCount);
         grid.getColumnByKey("count").setEditorComponent(countEditor);
 
-        // Редактирование поля "status" с ComboBox
         ComboBox<Status> statusEditor = new ComboBox<>();
-        statusEditor.setItems(Status.values()); // Добавляем возможные значения
+        statusEditor.setItems(Status.values());
         binder.forField(statusEditor).bind(Meal::getStatus, Meal::setStatus);
         grid.getColumnByKey("status").setEditorComponent(statusEditor);
 
@@ -125,8 +155,6 @@ public class MealView extends VerticalLayout {
 
         grid.addItemDoubleClickListener(event -> {
             grid.getEditor().editItem(event.getItem());
-
-            // Ловим событие нажатия Enter для сохранения данных
             grid.getElement().addEventListener("keydown", e -> {
                 if ("Enter".equals(e.getEventData().getString("event.key"))) {
                     grid.getEditor().save();
@@ -144,7 +172,6 @@ public class MealView extends VerticalLayout {
             );
         });
 
-        // Кнопка "Удалить"
         grid.addComponentColumn(meal -> {
             Button deleteButton = new Button("Удалить", clickEvent -> {
                 mealService.deleteById(meal.getId()).subscribe(
@@ -216,38 +243,24 @@ public class MealView extends VerticalLayout {
     private void updateGridItems() {
         mealService.findAll()
                 .filter(meal -> {
-                    // Фильтрация по имени
                     boolean matchesName = nameField.isEmpty() || meal.getName().toLowerCase().contains(nameField.getValue().toLowerCase());
-
-                    // Точная фильтрация по стоимости
                     boolean matchesCost = costField.isEmpty() || meal.getCost() == Integer.parseInt(costField.getValue());
-
-                    // Точная фильтрация по прибыли
                     boolean matchesProfit = profitField.isEmpty() || meal.getProfit() == Integer.parseInt(profitField.getValue());
-
-                    // Фильтрация по количеству
                     boolean matchesCount = countField.isEmpty() || String.valueOf(meal.getCount()).contains(countField.getValue());
-
-                    // Фильтрация по статусу
                     boolean matchesStatus = statusComboBox.isEmpty() || meal.getStatus().equals(statusComboBox.getValue());
-
-                    // Фильтрация по дате
                     boolean matchesDate = datePicker.isEmpty() || meal.getDate().equals(datePicker.getValue());
 
-                    // Возвращаем true, если все фильтры совпадают
                     return matchesName && matchesCost && matchesProfit && matchesCount && matchesStatus && matchesDate;
                 })
                 .collectList()
                 .subscribe(
                         meals -> {
                             grid.setItems(meals);
-                            updateProfitField(meals); // Обновляем поле прибыли
+                            updateProfitField(meals);
                         },
                         error -> Notification.show("Error fetching meals: " + error.getMessage())
                 );
     }
-
-
 
     // Метод для обновления поля "Прибыль"
     private void updateProfitField(List<Meal> meals) {
@@ -256,5 +269,30 @@ public class MealView extends VerticalLayout {
         int netProfit = totalProfit - totalCost;
 
         profitResultField.setValue("Прибыль: " + netProfit);
+    }
+
+    // Метод для настройки текущего времени и даты
+    private void configureDateTimeDisplay() {
+        HorizontalLayout dateTimeLayout = new HorizontalLayout();
+
+        // Настройка времени
+        currentTime.getStyle().set("font-size", "20px");
+        dateTimeLayout.add(currentTime);
+
+        // Настройка текущей даты
+        currentDate.setLabel("Сегодняшняя дата");
+        currentDate.setValue(LocalDateTime.now().toLocalDate());
+        dateTimeLayout.add(currentDate);
+
+        // Обновление времени каждые секунду
+        UI ui = UI.getCurrent();
+        ui.setPollInterval(1000); // Обновляем каждую секунду
+        ui.addPollListener(pollEvent -> {
+            String formattedTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"));
+            currentTime.setText("Текущее время: " + formattedTime);
+        });
+
+        // Добавляем компоненты времени и даты в интерфейс
+        add(dateTimeLayout);
     }
 }
