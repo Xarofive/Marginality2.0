@@ -32,6 +32,7 @@ public class MealServiceImpl implements MealService {
                 .flatMap(existingMeal -> {
                     existingMeal.setName(meal.getName());
                     existingMeal.setCost(meal.getCost());
+                    existingMeal.setProfit(meal.getProfit());
                     existingMeal.setStatus(meal.getStatus());
                     existingMeal.setCount(meal.getCount());
                     existingMeal.setDate(meal.getDate());

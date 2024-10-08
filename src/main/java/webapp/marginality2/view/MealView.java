@@ -16,7 +16,7 @@ import webapp.marginality2.model.Meal;
 import webapp.marginality2.model.Status;
 import webapp.marginality2.service.MealServiceImpl;
 
-import java.util.Arrays;
+import java.util.List;
 
 @Route("")
 public class MealView extends VerticalLayout {
@@ -30,12 +30,19 @@ public class MealView extends VerticalLayout {
     private ComboBox<Status> statusComboBox = new ComboBox<>();
     private DatePicker datePicker = new DatePicker();
 
+    private TextField profitResultField = new TextField("Прибыль"); // Поле для отображения общей прибыли
+
     public MealView(MealServiceImpl mealService) {
         this.mealService = mealService;
         configureGrid();
         configureToolbar();
 
-        add(grid);
+        // Настраиваем поле прибыли
+        profitResultField.setReadOnly(true); // Поле только для чтения
+        profitResultField.getStyle().set("font-size", "20px"); // Настройка стиля
+        profitResultField.setWidthFull(); // Растягиваем поле по ширине
+
+        add(grid, profitResultField); // Добавляем таблицу и поле прибыли
         updateGridItems();
     }
 
@@ -155,7 +162,6 @@ public class MealView extends VerticalLayout {
         });
     }
 
-
     private void configureToolbar() {
         Button addButton = new Button("Добавить новую запись", clickEvent -> openMealDialog(null));
         add(addButton);
@@ -208,18 +214,47 @@ public class MealView extends VerticalLayout {
     }
 
     private void updateGridItems() {
-        // Обновляем фильтрацию для всех полей
         mealService.findAll()
-                .filter(meal -> nameField.isEmpty() || meal.getName().contains(nameField.getValue()))
-                .filter(meal -> costField.isEmpty() || String.valueOf(meal.getCost()).contains(costField.getValue()))
-                .filter(meal -> profitField.isEmpty() || String.valueOf(meal.getProfit()).contains(profitField.getValue()))
-                .filter(meal -> countField.isEmpty() || String.valueOf(meal.getCount()).contains(countField.getValue()))
-                .filter(meal -> statusComboBox.isEmpty() || meal.getStatus().equals(statusComboBox.getValue()))
-                .filter(meal -> datePicker.isEmpty() || meal.getDate().equals(datePicker.getValue()))
+                .filter(meal -> {
+                    // Фильтрация по имени
+                    boolean matchesName = nameField.isEmpty() || meal.getName().toLowerCase().contains(nameField.getValue().toLowerCase());
+
+                    // Точная фильтрация по стоимости
+                    boolean matchesCost = costField.isEmpty() || meal.getCost() == Integer.parseInt(costField.getValue());
+
+                    // Точная фильтрация по прибыли
+                    boolean matchesProfit = profitField.isEmpty() || meal.getProfit() == Integer.parseInt(profitField.getValue());
+
+                    // Фильтрация по количеству
+                    boolean matchesCount = countField.isEmpty() || String.valueOf(meal.getCount()).contains(countField.getValue());
+
+                    // Фильтрация по статусу
+                    boolean matchesStatus = statusComboBox.isEmpty() || meal.getStatus().equals(statusComboBox.getValue());
+
+                    // Фильтрация по дате
+                    boolean matchesDate = datePicker.isEmpty() || meal.getDate().equals(datePicker.getValue());
+
+                    // Возвращаем true, если все фильтры совпадают
+                    return matchesName && matchesCost && matchesProfit && matchesCount && matchesStatus && matchesDate;
+                })
                 .collectList()
                 .subscribe(
-                        meals -> grid.setItems(meals),
+                        meals -> {
+                            grid.setItems(meals);
+                            updateProfitField(meals); // Обновляем поле прибыли
+                        },
                         error -> Notification.show("Error fetching meals: " + error.getMessage())
                 );
+    }
+
+
+
+    // Метод для обновления поля "Прибыль"
+    private void updateProfitField(List<Meal> meals) {
+        int totalProfit = meals.stream().mapToInt(Meal::getProfit).sum();
+        int totalCost = meals.stream().mapToInt(Meal::getCost).sum();
+        int netProfit = totalProfit - totalCost;
+
+        profitResultField.setValue("Прибыль: " + netProfit);
     }
 }
