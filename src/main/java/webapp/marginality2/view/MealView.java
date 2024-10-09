@@ -28,7 +28,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Route("")
-@JavaScript("https://cdn.jsdelivr.net/npm/chart.js") // Подключаем Chart.js
+@JavaScript("https://cdn.jsdelivr.net/npm/chart.js")
 public class MealView extends VerticalLayout {
 
     private final MealServiceImpl mealService;
@@ -44,8 +44,9 @@ public class MealView extends VerticalLayout {
     private Span currentTime = new Span();
     private DatePicker currentDate = new DatePicker();
 
-    // Контейнер для графика
-    private Div chartDiv = new Div();
+    // Контейнеры для графиков
+    private Div pieChartDiv = new Div();
+    private Div barChartDiv = new Div(); // Новый контейнер для столбчатой диаграммы
 
     public MealView(MealServiceImpl mealService) {
         this.mealService = mealService;
@@ -58,29 +59,33 @@ public class MealView extends VerticalLayout {
         profitResultField.getStyle().set("font-size", "20px");
         profitResultField.setWidthFull();
 
-        // Настраиваем диаграмму
-        chartDiv.setId("chart-container");
-        chartDiv.setWidth("400px");
-        chartDiv.setHeight("400px");
+        // Настраиваем диаграммы
+        pieChartDiv.setId("pie-chart-container");
+        pieChartDiv.setWidth("400px");
+        pieChartDiv.setHeight("400px");
 
-        // Создаем горизонтальный слой для даты, времени и диаграммы
-        HorizontalLayout dateTimeAndChartLayout = new HorizontalLayout();
-        dateTimeAndChartLayout.setWidthFull();
+        barChartDiv.setId("bar-chart-container");
+        barChartDiv.setWidth("400px");
+        barChartDiv.setHeight("400px");
 
-        // Выравниваем текущую дату и время по центру
-        HorizontalLayout dateLayout = new HorizontalLayout(currentDate);
-        dateLayout.setJustifyContentMode(JustifyContentMode.CENTER);
+        // Создаем горизонтальный слой для диаграмм
+        HorizontalLayout chartsLayout = new HorizontalLayout();
+        chartsLayout.setWidthFull();
+        chartsLayout.add(pieChartDiv, barChartDiv);
 
-        HorizontalLayout timeLayout = new HorizontalLayout(currentTime);
-        timeLayout.setJustifyContentMode(JustifyContentMode.CENTER);
-        timeLayout.setAlignItems(Alignment.CENTER);
+        // Создаем горизонтальный слой для даты, времени и диаграмм
+        HorizontalLayout dateTimeAndChartsLayout = new HorizontalLayout();
+        dateTimeAndChartsLayout.setWidthFull();
 
-        // Добавляем диаграмму в правую часть
-        dateTimeAndChartLayout.add(dateLayout, chartDiv);
-        dateTimeAndChartLayout.setAlignItems(Alignment.STRETCH); // Выравниваем все по центру по вертикали
+        HorizontalLayout dateTimeLayout = new HorizontalLayout(currentDate, currentTime);
+        dateTimeLayout.setAlignItems(Alignment.CENTER);
+
+        // Добавляем диаграммы в правую часть
+        dateTimeAndChartsLayout.add(dateTimeLayout, chartsLayout);
+        dateTimeAndChartsLayout.setAlignItems(Alignment.STRETCH);
 
         // Добавляем элементы на экран
-        add(grid, profitResultField, timeLayout, dateTimeAndChartLayout); // Теперь диаграмма и дата с временем в одном слое
+        add(grid, profitResultField, dateTimeAndChartsLayout);
         updateGridItems();
     }
 
@@ -262,7 +267,8 @@ public class MealView extends VerticalLayout {
                         meals -> {
                             grid.setItems(meals);
                             updateProfitField(meals);
-                            updatePieChart(meals); // Обновляем диаграмму
+                            updatePieChart(meals); // Обновляем круговую диаграмму
+                            updateBarChart(meals); // Обновляем столбчатую диаграмму
                         },
                         error -> Notification.show("Error fetching meals: " + error.getMessage())
                 );
@@ -277,7 +283,77 @@ public class MealView extends VerticalLayout {
         profitResultField.setValue("Прибыль: " + netProfit);
     }
 
-    // Метод для настройки текущего времени и даты
+    // Метод для обновления данных круговой диаграммы
+    private void updatePieChart(List<Meal> meals) {
+        String labels = meals.stream().map(Meal::getName).collect(Collectors.joining("\", \"", "[\"", "\"]"));
+        String data = meals.stream().map(Meal::getCount).map(String::valueOf).collect(Collectors.joining(", ", "[", "]"));
+
+        // Обновляем круговую диаграмму с помощью Chart.js
+        UI.getCurrent().getPage().executeJs(
+                "var ctx = document.getElementById('pie-chart-container').querySelector('canvas');" +
+                        "if (!ctx) {" +
+                        "  ctx = document.createElement('canvas');" +
+                        "  document.getElementById('pie-chart-container').appendChild(ctx);" +
+                        "}" +
+                        "if (window.myChart) window.myChart.destroy();" + // Удаляем предыдущий график, если он был
+                        "window.myChart = new Chart(ctx, {" +
+                        "    type: 'pie'," +
+                        "    data: {" +
+                        "        labels: " + labels + "," +
+                        "        datasets: [{" +
+                        "            data: " + data + "," +
+                        "            backgroundColor: ['#ff6384', '#36a2eb', '#cc65fe', '#ffce56']" +
+                        "        }]" +
+                        "    }," +
+                        "    options: {" +
+                        "        responsive: true" +
+                        "    }" +
+                        "});"
+        );
+    }
+
+    // Метод для обновления данных столбчатой диаграммы
+    private void updateBarChart(List<Meal> meals) {
+        String labels = meals.stream().map(Meal::getName).collect(Collectors.joining("\", \"", "[\"", "\"]"));
+        String costData = meals.stream().map(Meal::getCost).map(String::valueOf).collect(Collectors.joining(", ", "[", "]"));
+        String profitData = meals.stream().map(Meal::getProfit).map(String::valueOf).collect(Collectors.joining(", ", "[", "]"));
+
+        // Обновляем столбчатую диаграмму с помощью Chart.js
+        UI.getCurrent().getPage().executeJs(
+                "var ctx = document.getElementById('bar-chart-container').querySelector('canvas');" +
+                        "if (!ctx) {" +
+                        "  ctx = document.createElement('canvas');" +
+                        "  document.getElementById('bar-chart-container').appendChild(ctx);" +
+                        "}" +
+                        "if (window.barChart) window.barChart.destroy();" + // Удаляем предыдущий график, если он был
+                        "window.barChart = new Chart(ctx, {" +
+                        "    type: 'bar'," +
+                        "    data: {" +
+                        "        labels: " + labels + "," +
+                        "        datasets: [{" +
+                        "            label: 'Цена закупки'," +
+                        "            data: " + costData + "," +
+                        "            backgroundColor: '#36a2eb'," +
+                        "        }, {" +
+                        "            label: 'Цена продажи'," +
+                        "            data: " + profitData + "," +
+                        "            backgroundColor: '#ff6384'" +
+                        "        }]" +
+                        "    }," +
+                        "    options: {" +
+                        "        responsive: true," +
+                        "        scales: {" +
+                        "            yAxes: [{" +
+                        "                ticks: {" +
+                        "                    beginAtZero: true" +
+                        "                }" +
+                        "            }]" +
+                        "        }" +
+                        "    }" +
+                        "});"
+        );
+    }
+
     private void configureDateTimeDisplay() {
         HorizontalLayout dateTimeLayout = new HorizontalLayout();
 
@@ -296,34 +372,5 @@ public class MealView extends VerticalLayout {
         });
 
         add(dateTimeLayout);
-    }
-
-    // Метод для обновления данных диаграммы
-    private void updatePieChart(List<Meal> meals) {
-        String labels = meals.stream().map(Meal::getName).collect(Collectors.joining("\", \"", "[\"", "\"]"));
-        String data = meals.stream().map(Meal::getCount).map(String::valueOf).collect(Collectors.joining(", ", "[", "]"));
-
-        // Обновляем диаграмму с помощью Chart.js
-        UI.getCurrent().getPage().executeJs(
-                "var ctx = document.getElementById('chart-container').querySelector('canvas');" +
-                        "if (!ctx) {" +
-                        "  ctx = document.createElement('canvas');" +
-                        "  document.getElementById('chart-container').appendChild(ctx);" +
-                        "}" +
-                        "if (window.myChart) window.myChart.destroy();" + // Удаляем предыдущий график, если он был
-                        "window.myChart = new Chart(ctx, {" +
-                        "    type: 'pie'," +
-                        "    data: {" +
-                        "        labels: " + labels + "," +
-                        "        datasets: [{" +
-                        "            data: " + data + "," +
-                        "            backgroundColor: ['#ff6384', '#36a2eb', '#cc65fe', '#ffce56']" +
-                        "        }]" +
-                        "    }," +
-                        "    options: {" +
-                        "        responsive: true" +
-                        "    }" +
-                        "});"
-        );
     }
 }
