@@ -1,0 +1,26 @@
+body {
+    background-image: url('/images/background.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+/* Для прибыли, времени и даты */
+.profit-label {
+    color: white;
+    font-weight: bold;
+}
+
+.time-label, .date-label {
+    color: white;
+    font-weight: bold;
+}
+
+/* Для прозрачности Grid */
+.v-grid {
+    background-color: rgba(255, 255, 255, 0.5); /* Полупрозрачный белый цвет */
+}
+
+.v-grid .v-grid-cell {
+    background-color: rgba(255, 255, 255, 0.3); /* Прозрачные ячейки */
+}

@@ -11,6 +11,16 @@ import org.springframework.transaction.ReactiveTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.beans.factory.annotation.Value;
 
+/**
+ * DatabaseConfig — это конфигурационный класс, отвечающий за настройку подключения к базе данных
+ * с использованием R2DBC (Reactive Relational Database Connectivity).
+ *
+ * Данный класс использует параметры подключения, такие как URL, имя пользователя и пароль,
+ * которые загружаются из свойств конфигурации приложения.
+ *
+ *  @author Ivan Pshychenko
+ * © 2024 Ivan Pshychenko ☁️
+ */
 @Configuration
 @EnableTransactionManagement
 public class DatabaseConfig extends AbstractR2dbcConfiguration {
@@ -24,8 +34,12 @@ public class DatabaseConfig extends AbstractR2dbcConfiguration {
     @Value("${spring.r2dbc.password}")
     private String password;
 
-
-
+    /**
+     * Метод для создания и настройки фабрики подключений к базе данных.
+     * Параметры подключения извлекаются из свойств конфигурации приложения.
+     *
+     * @return ConnectionFactory — фабрика для создания реактивных подключений к базе данных.
+     */
     @Bean
     @Override
     public ConnectionFactory connectionFactory() {
@@ -37,9 +51,14 @@ public class DatabaseConfig extends AbstractR2dbcConfiguration {
         return ConnectionFactories.get(options);
     }
 
-
+    /**
+     * Метод для создания менеджера транзакций, который будет управлять реактивными транзакциями.
+     *
+     * @param connectionFactory фабрика подключений, используемая для создания транзакций.
+     * @return ReactiveTransactionManager — менеджер для обработки транзакций в реактивном стиле.
+     */
     @Bean
     public ReactiveTransactionManager transactionManager(ConnectionFactory connectionFactory) {
-        return new R2dbcTransactionManager(connectionFactory);
+        return new R2dbcTransactionManager(connectionFactory); // Возвращаем менеджер транзакций
     }
 }
